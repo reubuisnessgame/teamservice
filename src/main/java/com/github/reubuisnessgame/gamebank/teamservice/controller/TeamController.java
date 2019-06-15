@@ -19,6 +19,7 @@ public class TeamController {
         this.teamsDAO = teamsDAO;
     }
 
+    @PreAuthorize("hasAuthority('TEAM')")
     @RequestMapping(value = "/me")
     public @ResponseBody
     ResponseEntity getTeam(@RequestHeader(value = "Authorization") String token) {
@@ -46,7 +47,7 @@ public class TeamController {
     }
 
     @PreAuthorize("hasAuthority('TEAM')")
-    @RequestMapping(value = "/take_credit", method = RequestMethod.POST)
+    @RequestMapping(value = "/take/credit", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity takeCredit(@RequestHeader(value = "Authorization") String token,
                               @RequestParam(value = "sum") Double credit) {
@@ -60,7 +61,7 @@ public class TeamController {
     }
 
     @PreAuthorize("hasAuthority('TEAM')")
-    @RequestMapping(value = "/take_deposit", method = RequestMethod.POST)
+    @RequestMapping(value = "/take/deposit", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity takeDeposit(@RequestHeader(value = "Authorization") String token,
                               @RequestParam(value = "sum") Double deposit) {
@@ -74,7 +75,7 @@ public class TeamController {
     }
 
     @PreAuthorize("hasAuthority('TEAM')")
-    @RequestMapping(value = "/rpl_credit", method = RequestMethod.POST)
+    @RequestMapping(value = "/rtn/credit", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity replyLoan(@RequestHeader(value = "Authorization") String token,
                                @RequestParam(value = "sum") Double credit) {
@@ -88,7 +89,7 @@ public class TeamController {
     }
 
     @PreAuthorize("hasAuthority('TEAM')")
-    @RequestMapping(value = "/rtn_deposit", method = RequestMethod.POST)
+    @RequestMapping(value = "/rtn/deposit", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity returnDeposit(@RequestHeader(value = "Authorization") String token,
                                @RequestParam(value = "sum") Double deposit) {
