@@ -20,7 +20,7 @@ public class TeamController {
     }
 
     @PreAuthorize("hasAuthority('TEAM')")
-    @RequestMapping(value = "/me")
+    @RequestMapping(value = "/me", method = RequestMethod.GET)
     public @ResponseBody
     ResponseEntity getTeam(@RequestHeader(value = "Authorization") String token) {
         try {

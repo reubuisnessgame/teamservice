@@ -39,23 +39,18 @@ public class RepositoryComponent {
 
     TeamModel getTeamByToken(String token) {
         Long userId = getUserIdFromToken(token);
-        return teamsRepository.findById(userId).orElseThrow(() ->
+        return teamsRepository.findByUserId(userId).orElseThrow(() ->
                 new UsernameNotFoundException("Team ID: " + userId + " not found"));
     }
 
 
     private Long getUserIdFromToken(String token) {
         Jws<Claims> claims = jwtTokenProvider.getClaims(resolveToken(token));
-        return (Long) claims.getBody().get("userId");
+        return Long.valueOf((Integer) claims.getBody().get("userId"));
     }
 
 
-    TeamModel getTeamByNumber(Long number) {
-        return teamsRepository.findByTeamNumber(number).orElseThrow(() ->
-                new UsernameNotFoundException("Number: " + number + " not found"));
-    }
-
-    FullTeamForm getTeamFullInfo(TeamModel teamModel){
+    FullTeamForm getTeamFullInfo(TeamModel teamModel) {
         Iterable<ShareModel> shareModels = shareRepository.findAllByUserId(teamModel.getId());
         FullTeamForm fullTeamForm = new FullTeamForm();
         fullTeamForm.setTeam(teamModel);
@@ -79,7 +74,7 @@ public class RepositoryComponent {
     }
 
     Double calculateFullScore(Long id) {
-        TeamModel teamModel = teamsRepository.findById(id).orElseThrow(() ->
+        TeamModel teamModel = teamsRepository.findByUserId(id).orElseThrow(() ->
                 new UsernameNotFoundException("Team ID: " + id + " not found"));
         Iterable<ShareModel> shareModels = shareRepository.findAllByUserId(teamModel.getId());
         AtomicReference<Double> fullScore = new AtomicReference<>((double) 0);
@@ -87,9 +82,8 @@ public class RepositoryComponent {
             double price = s.getCompanyModel().getSharePrice() * s.getSharesNumbers();
             fullScore.updateAndGet(v -> v + price);
         });
-        return fullScore.get();
+        return (Math.round((fullScore.get() * 1000.0)) / 1000.0);
     }
-
 
 
     private String resolveToken(String bearerToken) {

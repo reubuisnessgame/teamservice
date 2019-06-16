@@ -4,7 +4,6 @@ import com.github.reubuisnessgame.gamebank.teamservice.model.UserModel;
 import com.github.reubuisnessgame.gamebank.teamservice.repository.UserRepository;
 import com.github.reubuisnessgame.gamebank.teamservice.security.CustomUserDetailsService;
 import io.jsonwebtoken.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -29,19 +28,19 @@ public class JwtTokenProvider {
     @Value("${security.jwt.token.expire-length:3600000}")
     private long validityInMilliseconds; // 10h
 
-    private final UserRepository userRepository;
-
     private final CustomUserDetailsService userDetailsService;
+
+    private final UserRepository userRepository;
 
     public JwtTokenProvider(CustomUserDetailsService userDetailsService, UserRepository userRepository) {
         this.userDetailsService = userDetailsService;
+
         this.userRepository = userRepository;
     }
 
     @PostConstruct
     protected void init() {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
-
     }
 
     public String createToken(String username, String role) {
@@ -62,7 +61,6 @@ public class JwtTokenProvider {
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
-
 
     Authentication getAuthentication(String token) {
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUsername(token));

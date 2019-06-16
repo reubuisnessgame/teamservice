@@ -8,8 +8,6 @@ import javax.persistence.*;
 import java.util.Collection;
 import java.util.Collections;
 
-import static com.github.senyast4745.gamebank.model.Role.LEADING;
-
 @Entity
 @Table(name = "userss")
 public class UserModel implements UserDetails {
@@ -40,7 +38,7 @@ public class UserModel implements UserDetails {
         this.password = password;
         switch (role) {
             case "LEADING": {
-                this.role = LEADING;
+                this.role = Role.LEADING;
                 break;
             }
             case "EXCHANGE_WORKER": {

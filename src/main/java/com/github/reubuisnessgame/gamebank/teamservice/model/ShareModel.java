@@ -24,7 +24,7 @@ public class ShareModel {
     private Long sharesNumbers;
 
     @ManyToOne
-    @JoinColumn(name = "company_id", nullable = false)
+    @JoinColumn(name = "company_model", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private CompanyModel companyModel;
 
