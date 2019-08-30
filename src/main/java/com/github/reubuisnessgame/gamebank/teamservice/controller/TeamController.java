@@ -3,6 +3,7 @@ package com.github.reubuisnessgame.gamebank.teamservice.controller;
 import com.github.reubuisnessgame.gamebank.teamservice.dao.TeamsDAO;
 import com.github.reubuisnessgame.gamebank.teamservice.form.StartGameForm;
 import com.github.reubuisnessgame.gamebank.teamservice.model.ExceptionModel;
+import org.checkerframework.common.util.report.qual.ReportReadWrite;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -46,25 +47,25 @@ public class TeamController {
         }
     }
 
-    @PreAuthorize("hasAuthority('TEAM')")
+    @PreAuthorize("hasAnyAuthority('MODERATOR', 'EXCHANGE_WORKER')")
     @RequestMapping(value = "/take/credit", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity takeCredit(@RequestHeader(value = "Authorization") String token,
                               @RequestParam(value = "sum") Double credit) {
         try {
             return ResponseEntity.ok(teamsDAO.takeCredit(token, credit));
-        }catch (IllegalAccessException | UsernameNotFoundException e) {
+        } catch (IllegalAccessException | UsernameNotFoundException e) {
             return ResponseEntity.status(403).body(new ExceptionModel(403, "Forbidden", e.getMessage(), "/team/take_credit"));
         } catch (Throwable e) {
             return ResponseEntity.status(500).body(new ExceptionModel(500, "Internal Error", e.getMessage(), "/team/take_credit"));
         }
     }
 
-    @PreAuthorize("hasAuthority('TEAM')")
+    @PreAuthorize("hasAnyAuthority('MODERATOR', 'EXCHANGE_WORKER')")
     @RequestMapping(value = "/take/deposit", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity takeDeposit(@RequestHeader(value = "Authorization") String token,
-                              @RequestParam(value = "sum") Double deposit) {
+                               @RequestParam(value = "sum") Double deposit) {
         try {
             return ResponseEntity.ok(teamsDAO.takeDeposit(token, deposit));
         } catch (IllegalAccessException | UsernameNotFoundException e) {
@@ -74,11 +75,11 @@ public class TeamController {
         }
     }
 
-    @PreAuthorize("hasAuthority('TEAM')")
+    @PreAuthorize("hasAnyAuthority('MODERATOR', 'EXCHANGE_WORKER')")
     @RequestMapping(value = "/rtn/credit", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity replyLoan(@RequestHeader(value = "Authorization") String token,
-                               @RequestParam(value = "sum") Double credit) {
+                             @RequestParam(value = "sum") Double credit) {
         try {
             return ResponseEntity.ok(teamsDAO.replyLoan(token, credit));
         } catch (IllegalAccessException | UsernameNotFoundException e) {
@@ -88,11 +89,11 @@ public class TeamController {
         }
     }
 
-    @PreAuthorize("hasAuthority('TEAM')")
+    @PreAuthorize("hasAnyAuthority('MODERATOR', 'EXCHANGE_WORKER')")
     @RequestMapping(value = "/rtn/deposit", method = RequestMethod.POST)
     public @ResponseBody
     ResponseEntity returnDeposit(@RequestHeader(value = "Authorization") String token,
-                               @RequestParam(value = "sum") Double deposit) {
+                                 @RequestParam(value = "sum") Double deposit) {
         try {
             return ResponseEntity.ok(teamsDAO.returnDeposit(token, deposit));
         } catch (IllegalAccessException | UsernameNotFoundException e) {
@@ -113,7 +114,6 @@ public class TeamController {
             return ResponseEntity.status(500).body(new ExceptionModel(500, "Internal Error", t.getMessage(), "/admin/start"));
         }
     }
-
 
 
 }

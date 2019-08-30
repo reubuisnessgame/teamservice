@@ -4,6 +4,8 @@ import com.github.reubuisnessgame.gamebank.teamservice.model.UserModel;
 import com.github.reubuisnessgame.gamebank.teamservice.repository.UserRepository;
 import com.github.reubuisnessgame.gamebank.teamservice.security.CustomUserDetailsService;
 import io.jsonwebtoken.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,8 @@ import java.util.Date;
 
 @Component
 public class JwtTokenProvider {
+
+    Logger LOGGER = LoggerFactory.getLogger(JwtTokenProvider.class.getSimpleName());
 
     @Value("${security.jwt.token.issued:hello}")
     private String ISSUED;
@@ -62,8 +66,12 @@ public class JwtTokenProvider {
                 .compact();
     }
 
-    Authentication getAuthentication(String token) {
+    Authentication getAuthentication(String token) throws IllegalAccessException {
         UserDetails userDetails = this.userDetailsService.loadUserByUsername(getUsername(token));
+        if(!userDetails.isAccountNonLocked()){
+            LOGGER.info("Account " + userDetails.getUsername() + " is " + userDetails.isAccountNonLocked());
+            throw new IllegalAccessException("Account have locked");
+        }
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 

@@ -8,15 +8,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 public class TeamsDAO {
     private static final long STOCK_PRICE_CHANGE = 300_000; //5 minutes
+    private static long STOP_GAME_TIME = 0;
 
-    private final double creditRate = 1.12;
-    private final double depositRate = 1.07;
+    private final double creditRate = 1.15;
+    private final double depositRate = 1.18;
 
     //public static final long PAY_TIME = 1_800_000; // 30 minutes
-    private static final long PAY_TIME = 30_000; // 30 minutes
+    private static final long PAY_TIME = 1_800_000; // 30 minutes
     private static final long SLEEP_CHECK_TIME = 30_000; // 30 seconds
 
     private final double sharePercent = 0.25;
@@ -74,13 +78,13 @@ public class TeamsDAO {
     public TeamModel takeDeposit(String token, Double deposit) throws IllegalAccessException {
         if (isGameStarted) {
             TeamModel teamModel = repositoryComponent.getTeamByToken(token);
-            Double tmpDeposit = teamModel.getDeposit();
-            if (deposit > tmpDeposit) {
-                deposit = tmpDeposit;
+            Double score = teamModel.getScore();
+            if (deposit > score) {
+                deposit = score;
             }
-            teamModel.setScore(teamModel.getScore() - deposit);
-            teamModel.setDeposit(tmpDeposit + deposit);
-            teamModel.setCreditTime(System.currentTimeMillis() + PAY_TIME);
+            teamModel.setScore(score - deposit);
+            teamModel.setDeposit(teamModel.getDeposit() + deposit);
+            teamModel.setDepositTime(System.currentTimeMillis() + PAY_TIME);
             return teamsRepository.save(teamModel);
         }
         throw new IllegalAccessException("The game has not started yet");
@@ -132,6 +136,10 @@ public class TeamsDAO {
     public void stopStartGame(boolean isGameStarted, long startTime) {
         this.isGameStarted = isGameStarted;
         lastPaySharesTime = startTime + STOCK_PRICE_CHANGE;
+        if(!isGameStarted){
+            STOP_GAME_TIME = startTime + SLEEP_CHECK_TIME + 100;
+        }
+        LOGGER.info("Lat pay Share Time is " + lastPaySharesTime);
     }
 
     // !!ALARM!! Database updated 30 seconds
@@ -142,10 +150,11 @@ public class TeamsDAO {
             try {
                 //noinspection InfiniteLoopStatement
                 while (true) {
-                    LOGGER.warn("Task ok " + System.currentTimeMillis());
+                    LOGGER.info("Task ok " + System.currentTimeMillis());
                     Thread.sleep(SLEEP_CHECK_TIME);
-                    if (isGameStarted || lastPaySharesTime + 100 > System.currentTimeMillis()) {
+                    if (isGameStarted || STOP_GAME_TIME > System.currentTimeMillis()) {
                         Iterable<TeamModel> teams = teamsRepository.findAll();
+                        List<TeamModel> teamModelList = new ArrayList<>();
                         teams.forEach((team) -> {
                             LOGGER.info("Check time for user " + team.getUsername());
                             Long tmpCreditTime = team.getCreditTime();
@@ -158,7 +167,7 @@ public class TeamsDAO {
                                 tmpCreditTime = System.currentTimeMillis() + PAY_TIME;
                                 team.setCredit(tmpCredit);
                                 team.setCreditTime(tmpCreditTime);
-                                LOGGER.warn("Credit time for user " + team.getUsername() + " credit " + team.getCredit());
+                                LOGGER.info("Credit time for user " + team.getUsername() + " credit " + team.getCredit());
                             }
                             if (tmpDepositTime != 0 && tmpDepositTime <= System.currentTimeMillis()) {
                                 Double tmpDeposit = team.getDeposit();
@@ -166,21 +175,22 @@ public class TeamsDAO {
                                 tmpDepositTime = System.currentTimeMillis() + PAY_TIME;
                                 team.setDeposit(tmpDeposit);
                                 team.setDepositTime(tmpDepositTime);
-                                LOGGER.warn("Deposit time for user " + team.getUsername() + " deposit " + team.getDeposit());
+                                LOGGER.info("Deposit time for user " + team.getUsername() + " deposit " + team.getDeposit());
 
                             }
                             double sharesPrice = repositoryComponent.calculateFullScore(team.getUserId());
                             double score = team.getScore();
                             if (lastPaySharesTime <= System.currentTimeMillis()) {
-                                score += sharesPrice * sharePercent;
+//                                sharesPrice += sharesPrice * sharePercent;
                                 team.setScore(score);
                             }
                             double fullScore = score - team.getCredit() + team.getDeposit() + sharesPrice;
                             team.setFullScore(fullScore);
-                            LOGGER.warn("Full score for user " + team.getUsername() + " full score " + team.getFullScore());
-                            teamsRepository.save(team);
+                            LOGGER.info("Full score for user " + team.getUsername() + " full score " + team.getFullScore());
+                            teamModelList.add(team);
 
                         });
+                        teamsRepository.saveAll(teamModelList);
                     }
 
                 }
